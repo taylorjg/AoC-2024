@@ -41,10 +41,7 @@ const getAntinodes2 = (grid, a, b, deltaRow, deltaCol) => {
   return antinodes;
 };
 
-// dirty hack!
-let inPart2Mode = false;
-
-const handleLine = (grid) => (points) => {
+const handleLine = (grid, inPart2Mode) => (points) => {
   const [a, b] = points;
   const deltaRow = Math.abs(a.row - b.row);
   const deltaCol = Math.abs(a.col - b.col);
@@ -60,41 +57,40 @@ const handleLine = (grid) => (points) => {
   return [antinode1, antinode2].filter(Boolean);
 };
 
-const handle2Lines = (grid, values) => {
-  const [a, b] = values;
-  return handleLine(grid)(a, b);
-};
-
-const handle3Lines = (grid, values) => {
-  const [a, b, c] = values;
-  return [
-    [a, b],
-    [b, c],
-    [a, c],
-  ].flatMap(handleLine(grid));
-};
-
-const handle4Lines = (grid, values) => {
-  const [a, b, c, d] = values;
-  return [
-    [a, b],
-    [a, c],
-    [a, d],
-    [b, c],
-    [b, d],
-    [c, d],
-  ].flatMap(handleLine(grid));
-};
-
-const handleGroup = (grid) => (group) => {
+const handleGroup = (grid, inPart2Mode) => (group) => {
   const [, values] = group;
 
   console.assert(values.length >= 2 && values.length <= 4);
 
+  const handle2Lines = (values) => {
+    return [values].flatMap(handleLine(grid, inPart2Mode));
+  };
+
+  const handle3Lines = (values) => {
+    const [a, b, c] = values;
+    return [
+      [a, b],
+      [b, c],
+      [a, c],
+    ].flatMap(handleLine(grid, inPart2Mode));
+  };
+
+  const handle4Lines = (values) => {
+    const [a, b, c, d] = values;
+    return [
+      [a, b],
+      [a, c],
+      [a, d],
+      [b, c],
+      [b, d],
+      [c, d],
+    ].flatMap(handleLine(grid, inPart2Mode));
+  };
+
   switch (values.length) {
-    case 2: return handle2Lines(grid, values);
-    case 3: return handle3Lines(grid, values);
-    case 4: return handle4Lines(grid, values);
+    case 2: return handle2Lines(values);
+    case 3: return handle3Lines(values);
+    case 4: return handle4Lines(values);
   }
 };
 
@@ -102,17 +98,16 @@ const part1 = async (filename) => {
   const grid = await readGrid(filename);
   const xs = grid.flatMap((arr, row) => arr.map((f, col) => ({ row, col, f }))).filter(({ f }) => f !== ".");
   const groups = groupBy(xs, (x) => x.f);
-  const antinodeLocations = Array.from(groups).flatMap(handleGroup(grid));
+  const antinodeLocations = Array.from(groups).flatMap(handleGroup(grid, false));
   const uniqueAntinodeLocations = uniqueValuesBy(antinodeLocations, ({ row, col }) => `${row}:${col}`);
   console.log(uniqueAntinodeLocations.length);
 };
 
 const part2 = async (filename) => {
-  inPart2Mode = true;
   const grid = await readGrid(filename);
   const xs = grid.flatMap((arr, row) => arr.map((f, col) => ({ row, col, f }))).filter(({ f }) => f !== ".");
   const groups = groupBy(xs, (x) => x.f);
-  const antinodeLocations = Array.from(groups).flatMap(handleGroup(grid)).concat(xs);
+  const antinodeLocations = Array.from(groups).flatMap(handleGroup(grid, true)).concat(xs);
   const uniqueAntinodeLocations = uniqueValuesBy(antinodeLocations, ({ row, col }) => `${row}:${col}`);
   console.log(uniqueAntinodeLocations.length);
 };
