@@ -1,9 +1,4 @@
-import { range, readLines } from "../utils.mjs";
-
-const parseFile = async (filename) => {
-  const lines = await readLines(filename);
-  return lines.map((line) => Array.from(line));
-};
+import { readGrid } from "../utils.mjs";
 
 const findStart = (grid) => {
   const row = grid.findIndex((line) => line.includes("^"));
@@ -48,7 +43,7 @@ const findRoute = (grid, start) => {
 };
 
 const part1 = async (filename) => {
-  const grid = await parseFile(filename);
+  const grid = await readGrid(filename);
   const start = findStart(grid);
   const locations = findRoute(grid, start);
   const set = new Set(locations.map(({ row, col }) => `${row}:${col}`));
@@ -76,7 +71,7 @@ const gridHasLoop = (grid, start) => {
 };
 
 const part2 = async (filename) => {
-  const grid = await parseFile(filename);
+  const grid = await readGrid(filename);
   const start = findStart(grid);
   const locations = findRoute(grid, start);
 

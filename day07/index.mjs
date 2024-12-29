@@ -23,7 +23,7 @@ const makeListsOfOperators = (operatorChars, n) => {
 
 const add = (a, b) => a + b;
 const mul = (a, b) => a * b;
-const concatenation = (a, b) => Number(a.toString() + b.toString());
+const concatenation = (a, b) => Number(`${a}${b}`);
 
 const lookupOperator = (ch) => {
   switch (ch) {
@@ -34,15 +34,16 @@ const lookupOperator = (ch) => {
 };
 
 const evaluateListOfOperators = (numbers, operators) => {
-  let result = numbers[0];
-
-  for (const index of range(operators.length)) {
+  const callbackFn = (acc, index) => {
     const operator = lookupOperator(operators[index]);
-    const operand = numbers[index + 1];
-    result = operator(result, operand);
-  }
+    const operand1 = acc;
+    const operand2 = numbers[index + 1];
+    return operator(operand1, operand2);
+  };
 
-  return result;
+  const seed = numbers[0];
+
+  return range(operators.length).reduce(callbackFn, seed);
 };
 
 const hasSolution = (operatorChars) => (equation) => {
