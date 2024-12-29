@@ -7,20 +7,57 @@ const checkBounds = (grid, p) => {
   return isWithinBounds ? p : undefined;
 };
 
+const getNextAntinode1 = (grid, a, b, deltaRow, deltaCol, n) => {
+  const row = a.row < b.row ? a.row - n * deltaRow : a.row + n * deltaRow;
+  const col = a.col < b.col ? a.col - n * deltaCol : a.col + n * deltaCol;
+  return checkBounds(grid, { row, col });
+};
+
+const getNextAntinode2 = (grid, a, b, deltaRow, deltaCol, n) => {
+  const row = a.row < b.row ? b.row + n * deltaRow : b.row - n * deltaRow;
+  const col = a.col < b.col ? b.col + n * deltaCol : b.col - n * deltaCol;
+  return checkBounds(grid, { row, col });
+};
+
+const getAntinodes1 = (grid, a, b, deltaRow, deltaCol) => {
+  const antinodes = [];
+  let n = 1;
+  for (; ;) {
+    const antinode = getNextAntinode1(grid, a, b, deltaRow, deltaCol, n++);
+    if (!antinode) break;
+    antinodes.push(antinode);
+  }
+  return antinodes;
+};
+
+const getAntinodes2 = (grid, a, b, deltaRow, deltaCol) => {
+  const antinodes = [];
+  let n = 1;
+  for (; ;) {
+    const antinode = getNextAntinode2(grid, a, b, deltaRow, deltaCol, n++);
+    if (!antinode) break;
+    antinodes.push(antinode);
+  }
+  return antinodes;
+};
+
+// dirty hack!
+let inPart2Mode = false;
+
 const handleLine = (grid) => (points) => {
   const [a, b] = points;
   const deltaRow = Math.abs(a.row - b.row);
   const deltaCol = Math.abs(a.col - b.col);
-  const antinode1Row = a.row < b.row ? a.row - deltaRow : a.row + deltaRow;
-  const antinode1Col = a.col < b.col ? a.col - deltaCol : a.col + deltaCol;
-  const antinode2Row = a.row < b.row ? b.row + deltaRow : b.row - deltaRow;
-  const antinode2Col = a.col < b.col ? b.col + deltaCol : b.col - deltaCol;
-  const antinode1 = { row: antinode1Row, col: antinode1Col };
-  const antinode2 = { row: antinode2Row, col: antinode2Col };
-  return [
-    checkBounds(grid, antinode1),
-    checkBounds(grid, antinode2),
-  ].filter(Boolean);
+
+  if (inPart2Mode) {
+    const antinodes1 = getAntinodes1(grid, a, b, deltaRow, deltaCol);
+    const antinodes2 = getAntinodes2(grid, a, b, deltaRow, deltaCol);
+    return [...antinodes1, ...antinodes2];
+  }
+
+  const antinode1 = getNextAntinode1(grid, a, b, deltaRow, deltaCol, 1);
+  const antinode2 = getNextAntinode2(grid, a, b, deltaRow, deltaCol, 1);
+  return [antinode1, antinode2].filter(Boolean);
 };
 
 const handle2Lines = (grid, values) => {
@@ -70,9 +107,22 @@ const part1 = async (filename) => {
   console.log(uniqueAntinodeLocations.length);
 };
 
+const part2 = async (filename) => {
+  inPart2Mode = true;
+  const grid = await readGrid(filename);
+  const xs = grid.flatMap((arr, row) => arr.map((f, col) => ({ row, col, f }))).filter(({ f }) => f !== ".");
+  const groups = groupBy(xs, (x) => x.f);
+  const antinodeLocations = Array.from(groups).flatMap(handleGroup(grid)).concat(xs);
+  const uniqueAntinodeLocations = uniqueValuesBy(antinodeLocations, ({ row, col }) => `${row}:${col}`);
+  console.log(uniqueAntinodeLocations.length);
+};
+
 const main = async () => {
   await part1("day08/example.txt");
   await part1("day08/input.txt");
+
+  await part2("day08/example.txt");
+  await part2("day08/input.txt");
 };
 
 main();
