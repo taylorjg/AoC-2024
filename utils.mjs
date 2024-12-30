@@ -18,6 +18,7 @@ export const groupBy = (xs, fn) => {
 };
 
 export const isEven = (n) => n % 2 === 0;
+export const last = (xs) => xs[xs.length - 1];
 
 export const range = (n) => Array.from(Array(n).keys());
 
