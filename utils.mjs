@@ -17,6 +17,8 @@ export const groupBy = (xs, fn) => {
   return m;
 };
 
+export const isEven = (n) => n % 2 === 0;
+
 export const range = (n) => Array.from(Array(n).keys());
 
 export const partition = (xs, p) => {
