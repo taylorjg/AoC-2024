@@ -1,4 +1,4 @@
-import { readGrid, range, sum, last, groupBy } from "../utils.mjs";
+import { readGrid, range, sum, last, groupBy, uniqueValuesBy } from "../utils.mjs";
 
 const parseFile = async (filename) => {
   const grid = await readGrid(filename);
@@ -30,7 +30,7 @@ const findTrailheads = (grid) => {
   return trailheads;
 };
 
-const calculateScore = (grid) => (trailhead) => {
+const calculateScore = (grid, trailhead, wantUniqueDestinations) => {
   const rows = grid.length;
   const cols = grid[0].length;
 
@@ -61,21 +61,29 @@ const calculateScore = (grid) => (trailhead) => {
     }
   };
 
-  const rowColString = (location) => `${location.row}:${location.col}`;
-
   const paths = [];
   helper(trailhead, 1, [trailhead], paths);
 
-  const groupedPaths = groupBy(paths, (path) => rowColString(last(path)));
-  console.log(trailhead, groupedPaths.size);
+  if (wantUniqueDestinations) {
+    const toRowColString = ({ row, col }) => `${row}:${col}`;
+    return uniqueValuesBy(paths, (path) => toRowColString(last(path))).length;
+  }
 
-  return groupedPaths.size;
+  return paths.length;
 };
 
 const part1 = async (filename) => {
   const grid = await parseFile(filename);
   const trailheads = findTrailheads(grid);
-  const scores = trailheads.map(calculateScore(grid));
+  const scores = trailheads.map((trailhead) => calculateScore(grid, trailhead, true));
+  const total = sum(scores);
+  console.log(total);
+};
+
+const part2 = async (filename) => {
+  const grid = await parseFile(filename);
+  const trailheads = findTrailheads(grid);
+  const scores = trailheads.map((trailhead) => calculateScore(grid, trailhead, false));
   const total = sum(scores);
   console.log(total);
 };
@@ -83,6 +91,9 @@ const part1 = async (filename) => {
 const main = async () => {
   await part1("day10/example.txt");
   await part1("day10/input.txt");
+
+  await part2("day10/example.txt");
+  await part2("day10/input.txt");
 };
 
 main();
