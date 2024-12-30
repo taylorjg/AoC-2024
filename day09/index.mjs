@@ -33,10 +33,6 @@ const appendNode = (root, node) => {
   return insertNode(root.prev, node);
 };
 
-const prependNode = (root, node) => {
-  return insertNode(root, node);
-};
-
 const walkForward = (root, fn) => {
   let node = root.next;
   for (; ;) {
@@ -46,19 +42,11 @@ const walkForward = (root, fn) => {
   }
 };
 
-const walkBackward = (root, fn) => {
-  let node = root.prev;
-  for (; ;) {
-    if (node === root) break;
-    fn(node)
-    node = node.prev;
-  }
-};
-
-const findForward = (root, p) => {
+const findForward = (root, p, optionalStopNode) => {
   let node = root.next;
   for (; ;) {
     if (node === root) break;
+    if (optionalStopNode && node === optionalStopNode) break;
     if (p(node)) return node;
     node = node.next;
   }
@@ -174,18 +162,81 @@ const calculateChecksum = (representation) => {
   return checksum;
 };
 
-const part1 = async (filename) => {
+const part1 = async (filename, showStringRep = false) => {
   const [line] = await readLines(filename);
   const chars = Array.from(line);
+
   const representation = buildRepresentation(chars);
+  showStringRep && console.log(toString(representation));
+
   defrag(representation);
+  showStringRep && console.log(toString(representation));
+
+  const checksum = calculateChecksum(representation);
+  console.log(checksum);
+};
+
+const defrag2 = (representation) => {
+  let currentId = findBackward(representation.root, (node) => node.type === FILE).id;
+
+  for (; ;) {
+    if (currentId < 0) break;
+    const node = findBackward(representation.root, (node) => node.type === FILE && node.id === currentId);
+    console.assert(node);
+    currentId--;
+
+    const destFreeBlock = findForward(representation.root, (n) => n.type === FREE && n.length >= node.length, node);
+    if (!destFreeBlock) continue;
+
+    const oldNext = node.next;
+    const oldPrev = node.prev;
+
+    if (oldPrev.type === FREE && oldNext.type === FREE) {
+      oldPrev.length += node.length;
+      oldPrev.length += oldNext.length;
+      removeNode(oldNext);
+    }
+
+    if (oldPrev.type === FREE && oldNext.type !== FREE) {
+      oldPrev.length += node.length;
+    }
+
+    if (oldPrev.type !== FREE && oldNext.type === FREE) {
+      oldNext.length += node.length;
+    }
+
+    if (oldPrev.type !== FREE && oldNext.type !== FREE) {
+      insertNode(oldPrev, { type: FREE, length: node.length });
+    }
+
+    removeNode(node);
+    insertNode(destFreeBlock.prev, node);
+
+    destFreeBlock.length -= node.length;
+    if (destFreeBlock.length === 0) removeNode(destFreeBlock);
+  }
+};
+
+const part2 = async (filename, showStringRep = false) => {
+  const [line] = await readLines(filename);
+  const chars = Array.from(line);
+
+  const representation = buildRepresentation(chars);
+  showStringRep && console.log(toString(representation));
+
+  defrag2(representation);
+  showStringRep && console.log(toString(representation));
+
   const checksum = calculateChecksum(representation);
   console.log(checksum);
 };
 
 const main = async () => {
-  await part1("day09/example.txt");
+  await part1("day09/example.txt", true);
   await part1("day09/input.txt");
+
+  await part2("day09/example.txt", true);
+  await part2("day09/input.txt");
 };
 
 main();
