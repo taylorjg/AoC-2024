@@ -26,7 +26,7 @@ const blink = (stones) => {
 
 const part1 = async (filename) => {
   let stones = await parseFile(filename);
-  for (const _ of range(75)) {
+  for (const _ of range(25)) {
     stones = blink(stones);
   }
   console.log(stones.length);
