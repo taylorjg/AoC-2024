@@ -1,4 +1,4 @@
-import { range, readGrid } from "../utils.mjs";
+import { range, sum, readGrid } from "../utils.mjs";
 import { A_Star } from "../a-star.mjs";
 
 const findThing = (grid, ch) => {
@@ -14,9 +14,12 @@ const findThing = (grid, ch) => {
 
 const part1 = async (filename) => {
   const grid = await readGrid(filename);
+
   const start = findThing(grid, "S");
   const end = findThing(grid, "E");
-  console.log({ start, end });
+
+  const startNode = { ...start, dir: ">" };
+  const endNode = { ...end, dir: "*" };
 
   const rows = grid.length;
   const cols = grid[0].length;
@@ -27,8 +30,8 @@ const part1 = async (filename) => {
     return rowDiff + colDiff;
   };
 
-  const d = (n) => {
-    return manhattanDistance(n, end);
+  const d = (n1, n2) => {
+    return n1.dir === n2.dir ? 1 : 1000;
   };
 
   const h = (n) => {
@@ -42,10 +45,10 @@ const part1 = async (filename) => {
   const findNeighbours = (n) => {
     const { row, col } = n;
     const ns = [
-      { row: row - 1, col },
-      { row: row + 1, col },
-      { row, col: col - 1 },
-      { row, col: col + 1 },
+      { row: row - 1, col, dir: "^"},
+      { row: row + 1, col, dir: "v" },
+      { row, col: col - 1, dir: "<" },
+      { row, col: col + 1, dir: ">" },
     ];
 
     return ns
@@ -53,14 +56,22 @@ const part1 = async (filename) => {
       .filter(({ row, col }) => grid[row][col] !== "#");
   };
 
-  const path = A_Star(start, end, d, h, findNeighbours);
-  console.log("path:", path);
+  const path = A_Star(startNode, endNode, d, h, findNeighbours);
+  // console.log("path:", path);
+
+  const scores = range(path.length - 1).map((index) => {
+    const prevDir = path[index].dir;
+    const nextDir = path[index + 1].dir;
+    return prevDir === nextDir ? 1 : 1001;
+  });
+  const total = sum(scores);
+  console.log(total);
 };
 
 const main = async () => {
   await part1("day16/example1.txt");
-  // await part1("day16/example2.txt");
-  // await part1("day16/input.txt");
+  await part1("day16/example2.txt");
+  await part1("day16/input.txt");
 };
 
 main();

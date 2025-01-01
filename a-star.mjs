@@ -57,7 +57,8 @@ export const A_Star = (
     if (openSet.length === 0) break;
     const currentItem = chooseBestItemFromOpenSet();
     if (currentItem.key === goalKey) {
-      return reconstructPath(cameFromMap, currentItem.node, makeKey);
+      const path = reconstructPath(cameFromMap, currentItem.node, makeKey);
+      return path;
     }
 
     removeFromOpenSet(currentItem);
