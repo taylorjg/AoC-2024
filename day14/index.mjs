@@ -1,4 +1,5 @@
-import { range, readLines } from "../utils.mjs";
+import { it } from "node:test";
+import { groupBy, range, readLines } from "../utils.mjs";
 
 const parseFile = async (filename) => {
   const lines = await readLines(filename);
@@ -70,9 +71,68 @@ const part1 = async (filename, width, height) => {
   console.log(total);
 };
 
+const visualiseQuadrant = (robots, width, height, quadrant) => {
+  const { minX, maxX, minY, maxY } = getDims(width, height, quadrant);
+  const robotsInQuadrant = robots.filter((robot) => {
+    const x = robot.p.x;
+    const y = robot.p.y;
+    return x >= minX && x <= maxX && y >= minY && y <= maxY;
+  });
+
+  const grid = range(height).map(_ => Array(width).fill("."));
+
+  for (const robot of robotsInQuadrant) {
+    const x = robot.p.x;
+    const y = robot.p.y;
+    grid[y][x] = "X";
+  }
+
+  for (const y of range(height)) {
+    console.log(grid[y].join(""));
+  }
+  console.log();
+};
+
+const diffsBy = (xs, fn) => range(xs.length - 1).map((index) => fn(xs[index + 1]) - fn(xs[index]));
+
+const detectLineOfRobots = (robots) => {
+  const groupedByY = groupBy(robots, (robot) => robot.p.y);
+  const lists = Array.from(groupedByY.values()).map(list => list.sort((a, b) => a.p.x - b.p.x));
+  const diffs = lists.map((list) => diffsBy(list, (robot) => robot.p.x));
+  const ones = diffs.map(list => list.filter(x => x === 1).length);
+  ones.sort((a, b) => b - a);
+  const most = ones[0];
+  return most > 20;
+};
+
+const part2 = async (filename, width, height, visualise = false) => {
+  const robots = await parseFile(filename);
+
+  let iterations = 0;
+
+  for (const _ of range(10_000)) {
+    moveRobots(robots, width, height, 1);
+    iterations++;
+    if (detectLineOfRobots(robots)) {
+      break;
+    }
+  }
+
+  console.log({ iterations });
+
+  if (visualise) {
+    visualiseQuadrant(robots, width, height, 0);
+    visualiseQuadrant(robots, width, height, 1);
+    visualiseQuadrant(robots, width, height, 2);
+    visualiseQuadrant(robots, width, height, 3);
+  }
+};
+
 const main = async () => {
   await part1("day14/example.txt", 11, 7);
   await part1("day14/input.txt", 101, 103);
+
+  await part2("day14/input.txt", 101, 103, false);
 };
 
 main();
