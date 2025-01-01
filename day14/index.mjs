@@ -1,4 +1,3 @@
-import { it } from "node:test";
 import { groupBy, range, readLines } from "../utils.mjs";
 
 const parseFile = async (filename) => {
