@@ -71,17 +71,10 @@ const part1 = async (filename, width, height) => {
   console.log(total);
 };
 
-const visualiseQuadrant = (robots, width, height, quadrant) => {
-  const { minX, maxX, minY, maxY } = getDims(width, height, quadrant);
-  const robotsInQuadrant = robots.filter((robot) => {
-    const x = robot.p.x;
-    const y = robot.p.y;
-    return x >= minX && x <= maxX && y >= minY && y <= maxY;
-  });
-
+const visualiseGrid = (robots, width, height) => {
   const grid = range(height).map(_ => Array(width).fill("."));
 
-  for (const robot of robotsInQuadrant) {
+  for (const robot of robots) {
     const x = robot.p.x;
     const y = robot.p.y;
     grid[y][x] = "X";
@@ -90,7 +83,6 @@ const visualiseQuadrant = (robots, width, height, quadrant) => {
   for (const y of range(height)) {
     console.log(grid[y].join(""));
   }
-  console.log();
 };
 
 const diffsBy = (xs, fn) => range(xs.length - 1).map((index) => fn(xs[index + 1]) - fn(xs[index]));
@@ -121,10 +113,7 @@ const part2 = async (filename, width, height, visualise = false) => {
   console.log({ iterations });
 
   if (visualise) {
-    visualiseQuadrant(robots, width, height, 0);
-    visualiseQuadrant(robots, width, height, 1);
-    visualiseQuadrant(robots, width, height, 2);
-    visualiseQuadrant(robots, width, height, 3);
+    visualiseGrid(robots, width, height);
   }
 };
 
@@ -132,7 +121,7 @@ const main = async () => {
   await part1("day14/example.txt", 11, 7);
   await part1("day14/input.txt", 101, 103);
 
-  await part2("day14/input.txt", 101, 103, false);
+  await part2("day14/input.txt", 101, 103, true);
 };
 
 main();
